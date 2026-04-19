@@ -410,102 +410,105 @@ pub fn build(b: *std.Build) void {
         "-DHAVE_CONFIG_H=1",
     };
 
-    const libnasm = b.addLibrary(.{
-        .name = "libnasm",
-        .root_module = b.createModule(.{
-            .target = target,
-            .optimize = optimize,
-        }),
+    const libnasm_mod = b.createModule(.{
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
     });
-    libnasm.linkLibC();
-    libnasm.addConfigHeader(config);
-    libnasm.addIncludePath(nasm_dep.path("include"));
-    libnasm.addIncludePath(nasm_dep.path("asm"));
-    libnasm.addIncludePath(nasm_dep.path("x86"));
-    libnasm.addIncludePath(nasm_dep.path("output"));
-    libnasm.addIncludePath(nasm_dep.path("."));
-    libnasm.addCSourceFiles(.{
+    libnasm_mod.addConfigHeader(config);
+    libnasm_mod.addIncludePath(nasm_dep.path("include"));
+    libnasm_mod.addIncludePath(nasm_dep.path("asm"));
+    libnasm_mod.addIncludePath(nasm_dep.path("x86"));
+    libnasm_mod.addIncludePath(nasm_dep.path("output"));
+    libnasm_mod.addIncludePath(nasm_dep.path("."));
+    libnasm_mod.addCSourceFiles(.{
         .root = nasm_dep.path("nasmlib"),
         .files = &nasmlib_sources,
         .flags = &flags,
     });
-    libnasm.addCSourceFiles(.{
+    libnasm_mod.addCSourceFiles(.{
         .root = nasm_dep.path("stdlib"),
         .files = &stdlib_sources,
         .flags = &flags,
     });
-    libnasm.addCSourceFiles(.{
+    libnasm_mod.addCSourceFiles(.{
         .root = nasm_dep.path("x86"),
         .files = &x86_sources,
         .flags = &flags,
     });
-    libnasm.addCSourceFiles(.{
+    libnasm_mod.addCSourceFiles(.{
         .root = nasm_dep.path("common"),
         .files = &common_sources,
         .flags = &flags,
     });
-    libnasm.addCSourceFiles(.{
+    libnasm_mod.addCSourceFiles(.{
         .root = nasm_dep.path("macros"),
         .files = &macros_sources,
         .flags = &flags,
     });
-    libnasm.addCSourceFiles(.{
+    libnasm_mod.addCSourceFiles(.{
         .root = nasm_dep.path("output"),
         .files = &output_sources,
         .flags = &flags,
     });
-    libnasm.addCSourceFiles(.{
+    libnasm_mod.addCSourceFiles(.{
         .root = nasm_dep.path("asm"),
         .files = &.{ "error.c", "warnings.c" },
         .flags = &flags,
     });
+    const libnasm = b.addLibrary(.{
+        .name = "libnasm",
+        .root_module = libnasm_mod,
+    });
     b.installArtifact(libnasm);
 
-    const nasm = b.addExecutable(.{
-        .name = "nasm",
-        .root_module = b.createModule(.{
-            .target = target,
-            .optimize = optimize,
-        }),
+    const nasm_mod = b.createModule(.{
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
     });
-    nasm.linkLibC();
-    nasm.addConfigHeader(config);
-    nasm.linkLibrary(libnasm);
-    nasm.addIncludePath(nasm_dep.path("include"));
-    nasm.addIncludePath(nasm_dep.path("asm"));
-    nasm.addIncludePath(nasm_dep.path("x86"));
-    nasm.addIncludePath(nasm_dep.path("output"));
-    nasm.addIncludePath(nasm_dep.path("."));
-    nasm.addCSourceFiles(.{
+    nasm_mod.addConfigHeader(config);
+    nasm_mod.linkLibrary(libnasm);
+    nasm_mod.addIncludePath(nasm_dep.path("include"));
+    nasm_mod.addIncludePath(nasm_dep.path("asm"));
+    nasm_mod.addIncludePath(nasm_dep.path("x86"));
+    nasm_mod.addIncludePath(nasm_dep.path("output"));
+    nasm_mod.addIncludePath(nasm_dep.path("."));
+    nasm_mod.addCSourceFiles(.{
         .root = nasm_dep.path("asm"),
         .files = &asm_sources,
         .flags = &flags,
     });
+    const nasm = b.addExecutable(.{
+        .name = "nasm",
+        .root_module = nasm_mod,
+    });
     b.installArtifact(nasm);
 
-    const ndisasm = b.addExecutable(.{
-        .name = "ndisasm",
-        .root_module = b.createModule(.{
-            .target = target,
-            .optimize = optimize,
-        }),
+    const ndisasm_mod = b.createModule(.{
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
     });
-    ndisasm.linkLibC();
-    ndisasm.addConfigHeader(config);
-    ndisasm.linkLibrary(libnasm);
-    ndisasm.addIncludePath(nasm_dep.path("include"));
-    ndisasm.addIncludePath(nasm_dep.path("asm"));
-    ndisasm.addIncludePath(nasm_dep.path("x86"));
-    ndisasm.addIncludePath(nasm_dep.path("."));
-    ndisasm.addCSourceFiles(.{
+    ndisasm_mod.addConfigHeader(config);
+    ndisasm_mod.linkLibrary(libnasm);
+    ndisasm_mod.addIncludePath(nasm_dep.path("include"));
+    ndisasm_mod.addIncludePath(nasm_dep.path("asm"));
+    ndisasm_mod.addIncludePath(nasm_dep.path("x86"));
+    ndisasm_mod.addIncludePath(nasm_dep.path("."));
+    ndisasm_mod.addCSourceFiles(.{
         .root = nasm_dep.path("disasm"),
         .files = &disasm_sources,
         .flags = &flags,
     });
-    ndisasm.addCSourceFiles(.{
+    ndisasm_mod.addCSourceFiles(.{
         .root = nasm_dep.path("asm"),
         .files = &.{"error.c"},
         .flags = &flags,
+    });
+    const ndisasm = b.addExecutable(.{
+        .name = "ndisasm",
+        .root_module = ndisasm_mod,
     });
     b.installArtifact(ndisasm);
 }
